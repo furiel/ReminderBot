@@ -1,0 +1,16 @@
+* Reminder bot
+
+This telegram can schedule you messages in the future. It can be used as a lightweight reminder app inside telegram.
+
+* Usage
+... once it is ready ...
+
+* Tests
+#+BEGIN_SRC sh
+$ pytests tests/
+#+END_SRC
+
+* Dependencies
+- hy3
+- python3
+- pytest - for testing
