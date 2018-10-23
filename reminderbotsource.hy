@@ -1,19 +1,19 @@
 (import sys traceback threading)
 (import syslogng)
-(import parser timerdb)
+(import parser timerdb telegramfetcher)
 
 (defclass ReminderBotSource [syslogng.LogSource]
   (defn init [self options]
+    (setv api-token (get options "api_token"))
     (setv self.event (threading.Event)
-          self.exit False)
-
-    (setv self.api-token (get options "api_token"))
+          self.exit False
+          self.fetcher (telegramfetcher.TelegramFetcher api-token))
     True)
 
   (defn fetch-logs [self timer-db]
     (while (not self.exit)
       (try
-        (setv request (input "waiting for input: "))
+        (setv request (self.fetcher.fetch))
         (self.add-notification timer-db request)
         (except [e Exception]
           (traceback.print_exc)))))
