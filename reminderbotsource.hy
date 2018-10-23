@@ -24,6 +24,7 @@
     (self.timer-db.start))
 
   (defn request-exit [self]
+    (self.fetcher.request-exit)
     (setv self.exit True)
     (self.timer-db.stop))
 
