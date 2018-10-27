@@ -34,6 +34,17 @@
         (response.read)
         (raise (Exception response.reason))))
 
+  (defn write-last-id-to-disk [self]
+    (os.makedirs self.persist-dir :exist_ok True)
+
+    (try
+      (with [f (open (os.path.join self.persist-dir "last_id.dat") "w")]
+        (f.write (str self.last-id)))
+      (except [e Exception]
+        (logger.error
+          (.format "Exception while writing last_id: {}"
+                   (str e))))))
+
   (defn update-largest-update-id [self messages]
     (setv update-ids
           (lfor
@@ -42,7 +53,8 @@
             (int (get message-block "update_id"))))
 
     (when update-ids
-        (setv self.last-id (+ 1 (max update-ids)))))
+      (setv self.last-id (+ 1 (max update-ids)))
+      (self.write-last-id-to-disk)))
 
   (defn fetch [self]
     (setv response
