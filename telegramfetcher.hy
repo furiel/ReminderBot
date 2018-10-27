@@ -1,8 +1,9 @@
 (import http.client urllib.parse json)
 
-;; (import logging)
-;; (logging.basicConfig)
-;; (.setLevel (logging.getLogger) logging.DEBUG)
+(import logging)
+(logging.basicConfig)
+(setv logger (logging.getLogger))
+(.setLevel logger logging.DEBUG)
 ;; (setv http.client.HTTPConnection.debuglevel 1)
 
 (defclass TelegramFetcher [object]
