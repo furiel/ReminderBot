@@ -56,15 +56,13 @@
       (setv self.last-id (+ 1 (max update-ids)))
       (self.write-last-id-to-disk)))
 
-  (defn fetch [self]
-    (setv response
-          (json.loads
-            (.decode
-              (self.getUpdates)
-              "utf-8")))
-    (setv messages (get response "result"))
-    (self.update-largest-update-id messages)
+  (defn get-response [self]
+    (json.loads
+      (.decode
+        (self.getUpdates)
+        "utf-8")))
 
+  (defn get-parsed-messages[self messages]
     (lfor
       message_block messages
       :setv message (get message_block "message")
@@ -73,6 +71,12 @@
        "from" (get message "from" "username")
        "chat" (get message "chat" "id")
        "update-id" (get message_block "update_id") }))
+
+  (defn fetch [self]
+    (setv response (self.get-response))
+    (setv messages (get response "result"))
+    (self.update-largest-update-id messages)
+    (self.get-parsed-messages messages))
 
   (defn load-last-id [self]
     (try
