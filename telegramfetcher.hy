@@ -21,7 +21,7 @@
   (defn getUpdates [self]
     (setv
       params {
-;              "offset" 123456
+              "offset" self.last-id
               "timeout" 60
               }
       params_encoded (urllib.parse.urlencode params)
@@ -34,6 +34,16 @@
         (response.read)
         (raise (Exception response.reason))))
 
+  (defn update-largest-update-id [self messages]
+    (setv update-ids
+          (lfor
+            message-block messages
+            :if (in "update_id" message-block)
+            (int (get message-block "update_id"))))
+
+    (when update-ids
+        (setv self.last-id (+ 1 (max update-ids)))))
+
   (defn fetch [self]
     (setv response
           (json.loads
@@ -41,6 +51,7 @@
               (self.getUpdates)
               "utf-8")))
     (setv messages (get response "result"))
+    (self.update-largest-update-id messages)
 
     (lfor
       message_block messages

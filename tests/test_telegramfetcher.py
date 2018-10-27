@@ -27,3 +27,8 @@ def test_fetch_messages(http_server, telegram_fetcher):
     assert message["from"] == "test_user"
     assert message["message"] == "test_message"
     assert message["update-id"] == 9999
+
+def test_largest_update_id(telegram_fetcher):
+    some_ids = [{"update_id": 1}, {"update_id": 5}, {"update_id": 7}]
+    telegram_fetcher.update_largest_update_id(some_ids)
+    assert telegram_fetcher.last_id == 8
