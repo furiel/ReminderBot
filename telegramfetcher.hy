@@ -1,4 +1,4 @@
-(import http.client urllib.parse json)
+(import http.client urllib.parse json os)
 
 (import logging)
 (logging.basicConfig)
@@ -51,5 +51,17 @@
        "chat" (get message "chat" "id")
        "update-id" (get message_block "update_id") }))
 
-  (defn --init-- [self api-token]
-    (setv self.api-token api-token)))
+  (defn load-last-id [self]
+    (try
+      (with [f (open (os.path.join self.persist-dir "last_id.dat"))]
+        (setv self.last_id (int (f.read))))
+      (except [e Exception]
+        (logger.error
+          (.format "Exception while reading last_id: {}"
+                   (str e)))
+        (setv self.last_id 0))))
+
+  (defn --init-- [self api-token &optional [persist-dir "persist-dir"]]
+    (setv self.api-token api-token
+          self.persist-dir persist-dir)
+    (self.load-last-id)))
