@@ -12,25 +12,29 @@
         [True (raise (ValueError (.format "Error: invalid modifier in {}: {}" timeout-str modifier-symb)))])
 
   (try
-    (if (not (.isdigit (cut timeout-str -1)))
+    (if (not (.isdigit modifier-symb))
         (setv timeout-str-without-modifier (cut timeout-str 0 -1))
         (setv timeout-str-without-modifier timeout-str))
 
-    (* (int (cut timeout-str-without-modifier 1)) modifier)
+    (* (int timeout-str-without-modifier) modifier)
     (except [e ValueError]
       (raise (ValueError (.format "Error: {} is invalid for timeout" timeout-str))))))
 
 (defn parse-input [input]
+  (setv example "/later 1h message")
+  ;; todo: /at 2018 12 24 10 15 00 text or something similar
+
+  (setv tokens (.split input :maxsplit 3))
+  (when (< (len tokens) 3)
+    (raise (ValueError (.format "Error: not enough arguments. Example: {}" example))))
+  (setv [command when message] tokens)
+
+  (when (not (in command ["/later"]))
+    (raise (ValueError (.format "Unknown command: {}. Example: {}" command example))))
+
   (try
-    (setv [when message] (.split input :maxsplit 1))
-    (except [e ValueError]
-      (raise (ValueError "Error: not enough arguments"))))
-
-  (setv timeout-type (first when))
-  (setv timeout -1)
-
-  (cond [(= timeout-type "+") (setv timeout (timeout-to-sec when))]
-        [(= timeout-type "@") (raise (NotImplementedError "@ version for timeout is not supported"))]
-        [True (raise (ValueError (.format "{} as timeout is invalid, should be + or @" timeout-type)))])
+    (setv timeout (timeout-to-sec when))
+    (except [e Exception]
+      (raise (ValueError (.format "Error while parsing: {}" (str e))))))
 
   (, timeout message))
