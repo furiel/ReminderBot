@@ -79,14 +79,19 @@
              "update-id" (get message_block "update_id") }))
 
     (for [item items]
+      (setv chat-id (get item "chat"))
       (try
         (setv [timeout message] (parser.parse-input (get item "message")))
-        (timers.append {"timeout" timeout "message" message})
-        (instant-responses.append { "message" (.format "Reminder scheduled. id={}" (get item "update-id")) })
+        (timers.append {"timeout" timeout "message" message "CHAT_ID" chat-id})
+        (instant-responses.append
+          {
+           "message" (.format "Reminder scheduled. id={}" (get item "update-id"))
+           "CHAT_ID" chat-id
+           })
 
         (except [e Exception]
           (pass)
-          (instant-responses.append { "message" (str e) }))))
+          (instant-responses.append { "message" (str e) "CHAT_ID" chat-id }))))
 
     (, instant-responses timers))
 

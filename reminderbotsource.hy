@@ -24,7 +24,7 @@
           (self.add-notification timer-db timer))
 
         (for [instant instant-responses]
-          (self.send-response timer-db (get instant "message")))
+          (self.send-response timer-db instant))
 
         (except [e Exception]
           (traceback.print_exc)))
@@ -42,15 +42,23 @@
     (self.timer-db.stop)
     (self.wait.set))
 
+  (defn create-logmessage [self message]
+    (setv text (get message "message")
+          chat_id (get message "CHAT_ID"))
+
+    (setv logmessage (syslogng.LogMessage text))
+    (assoc logmessage "CHAT_ID" (str chat_id))
+    logmessage)
+
   (defn add-notification [self timer-db timer]
     (timer-db.add-timer
       (get timer "timeout")
       (fn []
         (self.post_message
-          (syslogng.LogMessage (get timer "message"))))))
+          (self.create-logmessage timer)))))
 
-  (defn send-response [self timerdb message]
+  (defn send-response [self timerdb instant]
     (timerdb.call-immediately
       (fn []
       (self.post_message
-        (syslogng.LogMessage message))))))
+        (self.create-logmessage instant))))))
