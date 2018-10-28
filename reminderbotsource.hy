@@ -18,8 +18,9 @@
   (defn fetch-logs [self timer-db]
     (while (not self.exit)
       (try
-        (setv request (self.fetcher.fetch))
-        (self.add-notification timer-db request)
+        (setv requests (self.fetcher.fetch))
+        (for [request requests]
+          (self.add-notification timer-db request))
         (except [e Exception]
           (traceback.print_exc)))))
 
