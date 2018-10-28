@@ -2,6 +2,11 @@
 (import syslogng)
 (import parser timerdb telegramfetcher)
 
+(import logging)
+(logging.basicConfig)
+(setv logger (logging.getLogger))
+(.setLevel logger logging.DEBUG)
+
 (defclass ReminderBotSource [syslogng.LogSource]
   (defn init [self options]
     (setv api-token (get options "api_token"))
