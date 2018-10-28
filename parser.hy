@@ -24,7 +24,7 @@
   (setv example "/later 1h message")
   ;; todo: /at 2018 12 24 10 15 00 text or something similar
 
-  (setv tokens (.split input :maxsplit 3))
+  (setv tokens (.split input :maxsplit 2))
   (when (< (len tokens) 3)
     (raise (ValueError (.format "Error: not enough arguments. Example: {}" example))))
   (setv [command when message] tokens)

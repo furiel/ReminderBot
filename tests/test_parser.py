@@ -16,4 +16,5 @@ def test_timeout_conversion():
     assert 60 * 60 * 10 == timeout_to_sec("10h")
 
 def test_parse_input():
-    assert (10, "hello") == parse_input("/later 10s hello")
+    assert (10, "testmessage") == parse_input("/later 10s testmessage")
+    assert (10, "multiple word message") == parse_input("/later 10s multiple word message")
