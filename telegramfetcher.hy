@@ -64,7 +64,7 @@
         (self.getUpdates)
         "utf-8")))
 
-  (defn get-parsed-messages[self messages]
+  (defn parse-messages[self messages]
     (lfor
       message_block messages
       :setv message (get message_block "message")
@@ -82,7 +82,7 @@
       (setv response (self.get-response))
       (setv messages (get response "result"))
       (self.update-largest-update-id messages)
-      (setv retval (self.get-parsed-messages messages))
+      (setv retval (self.parse-messages messages))
 
       (except [e Exception]
         (logger.error (.format "Exception while fetch {}" (str e)))
