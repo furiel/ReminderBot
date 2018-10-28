@@ -14,4 +14,7 @@
     (self.loop.call_soon_threadsafe self.loop.stop))
 
   (defn add-timer [self when action]
-    (self.loop.call_soon_threadsafe self.loop.call_later when action)))
+    (self.loop.call_soon_threadsafe self.loop.call_later when action))
+
+  (defn call-immediately [self action]
+    (self.loop.call_soon_threadsafe action)))

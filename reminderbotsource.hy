@@ -23,6 +23,9 @@
         (for [timer timers]
           (self.add-notification timer-db timer))
 
+        (for [instant instant-responses]
+          (self.send-response timer-db (get instant "message")))
+
         (except [e Exception]
           (traceback.print_exc)))
 
@@ -44,4 +47,10 @@
       (get timer "timeout")
       (fn []
         (self.post_message
-          (syslogng.LogMessage (get timer "message")))))))
+          (syslogng.LogMessage (get timer "message"))))))
+
+  (defn send-response [self timerdb message]
+    (timerdb.call-immediately
+      (fn []
+      (self.post_message
+        (syslogng.LogMessage message))))))

@@ -82,7 +82,12 @@
       (try
         (setv [timeout message] (parser.parse-input (get item "message")))
         (timers.append {"timeout" timeout "message" message})
-        (except [e Exception] (logger.error (str e)))))
+        (instant-responses.append { "message" (.format "Reminder scheduled. id={}" (get item "update-id")) })
+
+        (except [e Exception]
+          (pass)
+          (instant-responses.append { "message" (str e) }))))
+
     (, instant-responses timers))
 
   (defn fetch [self]
