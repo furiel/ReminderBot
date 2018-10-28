@@ -1,6 +1,6 @@
 (import sys traceback threading)
 (import syslogng)
-(import parser timerdb telegramfetcher)
+(import timerdb telegramfetcher)
 
 (import logging)
 (logging.basicConfig)
@@ -18,9 +18,11 @@
   (defn fetch-logs [self timer-db]
     (while (not self.exit)
       (try
-        (setv requests (self.fetcher.fetch))
-        (for [request requests]
-          (self.add-notification timer-db request))
+        (setv [instant-responses timers] (self.fetcher.fetch))
+
+        (for [timer timers]
+          (self.add-notification timer-db timer))
+
         (except [e Exception]
           (traceback.print_exc)))
 
@@ -37,10 +39,9 @@
     (self.timer-db.stop)
     (self.wait.set))
 
-  (defn add-notification [self timer-db request]
-    (setv [timeout message] (parser.parse-input request))
+  (defn add-notification [self timer-db timer]
     (timer-db.add-timer
-      timeout
+      (get timer "timeout")
       (fn []
         (self.post_message
-          (syslogng.LogMessage message))))))
+          (syslogng.LogMessage (get timer "message")))))))

@@ -1,4 +1,5 @@
 (import http.client urllib.parse json os)
+(import parser)
 
 (import logging)
 (logging.basicConfig)
@@ -65,16 +66,28 @@
         "utf-8")))
 
   (defn parse-messages[self messages]
-    (lfor
-      message_block messages
-      :setv message (get message_block "message")
-      :if (in "text" message)
-      {"message" (get message "text")
-       "from" (get message "from" "username")
-       "chat" (get message "chat" "id")
-       "update-id" (get message_block "update_id") }))
+    (setv instant-responses (list)
+          timers (list))
+    (setv items
+          (lfor
+            message_block messages
+            :setv message (get message_block "message")
+            :if (in "text" message)
+            {"message" (get message "text")
+             "from" (get message "from" "username")
+             "chat" (get message "chat" "id")
+             "update-id" (get message_block "update_id") }))
+
+    (for [item items]
+      (try
+        (setv [timeout message] (parser.parse-input (get item "message")))
+        (timers.append {"timeout" timeout "message" message})
+        (except [e Exception] (logger.error (str e)))))
+    (, instant-responses timers))
 
   (defn fetch [self]
+    (setv instant-responses (list)
+          timers (list))
     (try
       (when (not self.conn)
         (self.connect))
@@ -82,12 +95,12 @@
       (setv response (self.get-response))
       (setv messages (get response "result"))
       (self.update-largest-update-id messages)
-      (setv retval (self.parse-messages messages))
+      (setv [instant-responses timers] (self.parse-messages messages))
 
       (except [e Exception]
         (logger.error (.format "Exception while fetch {}" (str e)))
         (self.disconnect)))
-    retval)
+    (, instant-responses timers))
 
   (defn load-last-id [self]
     (try
