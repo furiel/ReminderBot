@@ -10,7 +10,7 @@
 (defclass ReminderBotSource [syslogng.LogSource]
   (defn init [self options]
     (setv api-token (get options "api_token"))
-    (setv self.event (threading.Event)
+    (setv self.wait (threading.Event)
           self.exit False
           self.fetcher (telegramfetcher.TelegramFetcher api-token))
     True)
@@ -22,7 +22,9 @@
         (for [request requests]
           (self.add-notification timer-db request))
         (except [e Exception]
-          (traceback.print_exc)))))
+          (traceback.print_exc)))
+
+      (self.wait.wait 1)))
 
   (defn run [self]
     (setv self.timer-db (timerdb.TimerDB))
@@ -32,7 +34,8 @@
   (defn request-exit [self]
     (self.fetcher.request-exit)
     (setv self.exit True)
-    (self.timer-db.stop))
+    (self.timer-db.stop)
+    (self.wait.set))
 
   (defn add-notification [self timer-db request]
     (setv [timeout message] (parser.parse-input request))
