@@ -13,7 +13,9 @@
     self.conn)
 
   (defn disconnect [self]
-    (.close self.conn))
+    (when self.conn
+      (.close self.conn))
+    (setv self.conn None))
 
   (defn request-exit [self]
     (self.disconnect))
@@ -73,10 +75,19 @@
        "update-id" (get message_block "update_id") }))
 
   (defn fetch [self]
-    (setv response (self.get-response))
-    (setv messages (get response "result"))
-    (self.update-largest-update-id messages)
-    (self.get-parsed-messages messages))
+    (try
+      (when (not self.conn)
+        (self.connect))
+
+      (setv response (self.get-response))
+      (setv messages (get response "result"))
+      (self.update-largest-update-id messages)
+      (setv retval (self.get-parsed-messages messages))
+
+      (except [e Exception]
+        (logger.error (.format "Exception while fetch {}" (str e)))
+        (self.disconnect)))
+    retval)
 
   (defn load-last-id [self]
     (try
@@ -89,6 +100,8 @@
         (setv self.last_id 0))))
 
   (defn --init-- [self api-token &optional [persist-dir "persist-dir"]]
-    (setv self.api-token api-token
-          self.persist-dir persist-dir)
+    (setv
+      self.conn None
+      self.api-token api-token
+      self.persist-dir persist-dir)
     (self.load-last-id)))
