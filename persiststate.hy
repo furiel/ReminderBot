@@ -1,43 +1,27 @@
-(import os tempfile glob)
+(import os glob json)
 
 (defclass CorruptPersistFile [Exception])
 
-(setv PERSIST-STATE-DIR (+ (os.getcwd) "/persist/"))
+(defclass PersistState [object]
+  (defn --init-- [self persist-dir]
+    (os.makedirs persist-dir :exist_ok True)
+    (setv self.persist-dir persist-dir))
 
-(defn init [dir]
-  (unless (os.path.exists dir)
-    (os.makedirs dir))
-  (setv PERSIST-STATE-DIR dir))
+  (defn save [self id data]
+    (setv payload (json.dumps data))
+    (setv filename (os.path.join self.persist-dir (.format "{}.persist" id)))
+    (with [f (open filename "w")]
+      (f.write payload)))
 
-(defn get-id [filename]
-  (setv basename (os.path.basename filename))
-  (setv [id ext] (os.path.splitext basename))
-  id)
+  (defn load-all [self]
+    (setv persist-files (glob.glob (os.path.join self.persist-dir "*.persist")))
 
-(defn save [data]
-  (setv [fd abspath] (tempfile.mkstemp :dir PERSIST-STATE-DIR :prefix "" :suffix ".persist"))
-  (os.write fd (.encode (.format "{:d} {}" (len data) data)))
-  (get-id abspath))
+    (lfor
+      filename persist-files
+      :if (os.path.isfile filename)
+      (with [f (open filename)]
+        (json.loads (.read f)))))
 
-(defn active-states []
-
-  (setv states (list))
-  (for [filename (glob.glob (os.path.join PERSIST-STATE-DIR "*.persist"))]
-    (unless (os.path.isfile filename)
-      (continue))
-
-    (with [f (open filename)]
-      (setv content (.read f))
-      (setv [length data] (.split content :maxsplit 2))
-
-      (unless (= (len data) (int length))
-        (raise (CorruptPersistFile filename)))
-
-      (setv id (get-id filename))
-      (setv state (dict))
-      (assoc state "id" id "data" data)
-      (.append states state)))
-  states)
-
-(defn forget [id]
-  (os.unlink (os.path.join PERSIST-STATE-DIR (+ id ".persist"))))
+    (defn remove [self id]
+      (setv filename (os.path.join self.persist-dir (.format "{}.persist" id)))
+      (os.unlink filename)))
