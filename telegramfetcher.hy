@@ -116,7 +116,7 @@
       (setv [instant-responses timers] (self.parse-messages messages))
 
       (except [e Exception]
-        (logger.error (.format "Exception while fetch {}" (str e)))
+        (logger.error (.format "Exception while fetch: {} {}" (str e) (traceback.print_exc)))
         (self.disconnect)))
     (, instant-responses timers))
 
