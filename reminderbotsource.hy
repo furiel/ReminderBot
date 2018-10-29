@@ -9,10 +9,12 @@
 
 (defclass ReminderBotSource [syslogng.LogSource]
   (defn init [self options]
-    (setv api-token (get options "api_token"))
+    (setv api-token (get options "api_token")
+          allowed-users (.get options "allowed_users"))
+
     (setv self.wait (threading.Event)
           self.exit False
-          self.fetcher (telegramfetcher.TelegramFetcher api-token))
+          self.fetcher (telegramfetcher.TelegramFetcher api-token :allowed-users allowed_users))
     True)
 
   (defn fetch-logs [self timer-db]

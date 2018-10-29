@@ -1,6 +1,6 @@
 import hy
 import telegramfetcher, httpserversimulator
-import pprint, ssl, pytest
+import pprint, ssl, pytest, json
 
 @pytest.fixture
 def http_server():
@@ -30,3 +30,26 @@ def test_largest_update_id(telegram_fetcher):
     some_ids = [{"update_id": 1}, {"update_id": 5}, {"update_id": 7}]
     telegram_fetcher.update_largest_update_id(some_ids)
     assert telegram_fetcher.last_id == 8
+
+
+def test_allowed_users(http_server):
+    telegram_fetcher = telegramfetcher.TelegramFetcher("secret_bot_id", allowed_users="user1,user3")
+    telegram_fetcher.connect(host="localhost:5555", context=ssl._create_unverified_context())
+
+    msg = \
+    '''{"result":[
+      {"update_id":9999,"message":{"from":{"username":"user1"},"chat":{"id":12456},"text":"/later 1 user1"}},
+      {"update_id":9999,"message":{"from":{"username":"user2"},"chat":{"id":12456},"text":"/later 1 user2"}},
+      {"update_id":9999,"message":{"from":{"username":"user3"},"chat":{"id":12456},"text":"/later 1 user3"}},
+      {"update_id":9999,"message":{"from":{"username":"user4"},"chat":{"id":12456},"text":"/later 1 user4"}}
+    ]}'''
+
+    http_server.feed_data(msg)
+
+    instant_messages, timers = telegram_fetcher.fetch()
+
+    assert len(timers) == 2
+    assert timers[0]["message"] == "user1"
+    assert timers[1]["message"] == "user3"
+
+    telegram_fetcher.disconnect()

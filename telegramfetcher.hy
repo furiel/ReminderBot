@@ -65,6 +65,11 @@
         (self.getUpdates)
         "utf-8")))
 
+  (defn is-allowed [self item]
+    (setv from (get item "from"))
+    (or (not self.allowed-users)
+        (in from self.allowed-users)))
+
   (defn parse-messages[self messages]
     (setv instant-responses (list)
           timers (list))
@@ -79,6 +84,9 @@
              "update-id" (get message_block "update_id") }))
 
     (for [item items]
+      (when (not (self.is-allowed item))
+        (continue))
+
       (setv chat-id (get item "chat"))
       (try
         (setv [timeout message] (parser.parse-input (get item "message")))
@@ -122,9 +130,13 @@
                    (str e)))
         (setv self.last_id 0))))
 
-  (defn --init-- [self api-token &optional [persist-dir "persist-dir"]]
+  (defn --init-- [self api-token &optional [persist-dir "persist-dir"] [allowed-users None]]
     (setv
+      self.allowed-users allowed-users
       self.conn None
       self.api-token api-token
       self.persist-dir persist-dir)
+
+    (when allowed-users
+      (setv self.allowed-users (.split allowed-users ",")))
     (self.load-last-id)))
