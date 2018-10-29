@@ -1,6 +1,9 @@
 (import os glob json)
 
-(defclass CorruptPersistFile [Exception])
+(import logging)
+(logging.basicConfig)
+(setv logger (logging.getLogger))
+(.setLevel logger logging.DEBUG)
 
 (defclass PersistState [object]
   (defn --init-- [self persist-dir]
@@ -19,8 +22,14 @@
     (lfor
       filename persist-files
       :if (os.path.isfile filename)
-      (with [f (open filename)]
-        (json.loads (.read f)))))
+      :setv content (try
+                      (with [f (open filename)]
+                        (json.loads (.read f)))
+                      (except [e Exception]
+                        (logging.error (.format "corrupt persist file: {}" (str e)))
+                        None))
+      :if content
+      content))
 
     (defn remove [self id]
       (setv filename (os.path.join self.persist-dir (.format "{}.persist" id)))
