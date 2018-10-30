@@ -1,3 +1,5 @@
+(import datetime math)
+
 (defclass InvalidInputException [Exception])
 
 (defn timeout-to-sec [timeout-str]
@@ -45,5 +47,13 @@
   (, timeout message))
 
 (defn parse-as-at [parameters]
-  ;; todo: /at 2018-12-24-10-15-00
-)
+  (setv example "/at 2018:12:24::10:15:00 message")
+
+  (try
+    (setv [when message] (.split parameters :maxsplit 1))
+    (except [e ValueError]
+      (raise (ValueError (.format "Error: not enough arguments. Example: {}" example)))))
+  (setv date (datetime.datetime.strptime when "%Y:%m:%d::%H:%M:%S"))
+  (setv now (datetime.datetime.now))
+  (setv timeout (math.ceil (.total-seconds (- date now))))
+  (, timeout message))
