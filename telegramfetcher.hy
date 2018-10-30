@@ -99,7 +99,6 @@
            })
 
         (except [e Exception]
-          (pass)
           (instant-responses.append { "message" (str e) "CHAT_ID" chat-id }))))
 
     (, instant-responses timers))
