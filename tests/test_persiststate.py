@@ -11,8 +11,7 @@ def test_persiststate():
         persist_state.save(2, obj2)
 
         objects = persist_state.load_all()
-        assert objects[0]["test_field"] == "test1"
-        assert objects[1]["test_field"] == "test2"
+        assert set([objects[0]["test_field"], objects[1]["test_field"]]) == set(["test1", "test2"])
 
         persist_state.remove(2)
 
