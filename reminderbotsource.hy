@@ -1,6 +1,6 @@
-(import sys traceback threading)
+(import sys traceback threading time math)
 (import syslogng)
-(import timerdb telegramfetcher)
+(import timerdb telegramfetcher persiststate)
 
 (import logging)
 (logging.basicConfig)
@@ -14,8 +14,14 @@
 
     (setv self.wait (threading.Event)
           self.exit False
-          self.fetcher (telegramfetcher.TelegramFetcher api-token :allowed-users allowed_users))
+          self.fetcher (telegramfetcher.TelegramFetcher api-token :allowed-users allowed_users)
+          self.persist-state (persiststate.PersistState "persist-dir")
+          self.unhandled-timers (self.persist-state.load-all))
     True)
+
+  (defn add-to-persist [self timer]
+    (assoc timer "creation-time" (math.ceil (time.time)))
+    (self.persist-state.save (get timer "id") timer))
 
   (defn fetch-logs [self timer-db]
     (while (not self.exit)
@@ -23,6 +29,7 @@
         (setv [instant-responses timers] (self.fetcher.fetch))
 
         (for [timer timers]
+          (self.add-to-persist timer)
           (self.add-notification timer-db timer))
 
         (for [instant instant-responses]
@@ -33,8 +40,20 @@
 
       (self.wait.wait 1)))
 
+  (defn re-add-persist-timer [self timer-db timer]
+    (setv current-time (math.ceil (time.time))
+          creation-time (get timer "creation-time")
+          original-timeout (get timer "timeout")
+          timeout (- original-timeout (- current-time creation-time)))
+    (assoc timer "timeout" timeout)
+    (self.add-notification timer-db timer))
+
   (defn run [self]
     (setv self.timer-db (timerdb.TimerDB))
+    (for [timer self.unhandled-timers]
+      (self.re-add-persist-timer self.timer-db timer))
+    (setv self.unhandled-timers (list))
+
     (.start (threading.Thread :target self.fetch-logs :args (, self.timer-db)))
     (self.timer-db.start))
 
@@ -57,7 +76,8 @@
       (get timer "timeout")
       (fn []
         (self.post_message
-          (self.create-logmessage timer)))))
+          (self.create-logmessage timer))
+        (self.persist-state.remove (get timer "id")))))
 
   (defn send-response [self timerdb instant]
     (timerdb.call-immediately

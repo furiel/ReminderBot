@@ -1,4 +1,4 @@
-(import http.client urllib.parse json os)
+(import http.client urllib.parse json os traceback)
 (import parser)
 
 (import logging)
@@ -88,12 +88,13 @@
         (continue))
 
       (setv chat-id (get item "chat"))
+      (setv id (get item "update-id"))
       (try
         (setv [timeout message] (parser.parse-input (get item "message")))
-        (timers.append {"timeout" timeout "message" message "CHAT_ID" chat-id})
+        (timers.append {"timeout" timeout "message" message "CHAT_ID" chat-id "id" id})
         (instant-responses.append
           {
-           "message" (.format "Reminder scheduled. id={}" (get item "update-id"))
+           "message" (.format "Reminder scheduled. id={}" id)
            "CHAT_ID" chat-id
            })
 
