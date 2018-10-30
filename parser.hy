@@ -21,20 +21,29 @@
       (raise (ValueError (.format "Error: {} is invalid for timeout" timeout-str))))))
 
 (defn parse-input [input]
+  (try
+    (setv [command parameters] (.split input :maxsplit 1))
+    (except [e ValueError]
+      (raise (ValueError (.format "Not enough parameters: {}" (str))))))
+
+  (cond [(= command "/later") (parse-as-later parameters)]
+        [(= command "/at") (parse-as-at parameters)]
+        [True (raise (ValueError (.format "Unknown command, should be /later or /at: {}" command)))]))
+
+(defn parse-as-later [parameters]
   (setv example "/later 1h message")
-  ;; todo: /at 2018 12 24 10 15 00 text or something similar
 
-  (setv tokens (.split input :maxsplit 2))
-  (when (< (len tokens) 3)
-    (raise (ValueError (.format "Error: not enough arguments. Example: {}" example))))
-  (setv [command when message] tokens)
-
-  (when (not (in command ["/later"]))
-    (raise (ValueError (.format "Unknown command: {}. Example: {}" command example))))
+  (try
+    (setv [when message] (.split parameters :maxsplit 1))
+    (except [e ValueError]
+      (raise (ValueError (.format "Error: not enough arguments. Example: {}" example)))))
 
   (try
     (setv timeout (timeout-to-sec when))
     (except [e Exception]
       (raise (ValueError (.format "Error while parsing: {}" (str e))))))
-
   (, timeout message))
+
+(defn parse-as-at [parameters]
+  ;; todo: /at 2018-12-24-10-15-00
+)
