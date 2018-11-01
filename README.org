@@ -2,8 +2,28 @@
 
 This telegram can schedule you messages in the future. It can be used as a lightweight reminder app inside telegram.
 
+* Installation
+  - Install hy3 (pip3 install hy)
+  - Install syslog-ng (>=3.18).
+    If compiled from source, make sure http and python3 support is enabled:
+    - with autotools/configure: configure --enable-http --enable-python --with-python=3
+    - with cmake: cmake -DPYTHON_VERSION=3 -DENABLE_PYTHON=yes -DENABLE_CURL=yes
+
+  - Clone ReminderBot somewhere.
+  - Add project to pythonpath: for example into a systemd file: Environment="PYTHONPATH=[..]/ReminderBot"
+  - Edit your syslog-ng configuration based on the example.
+  - Make sure you edit the bot id to your telegram api token
+  - Make sure you edit the allowed_users as a comma separated value. If you want any user to use your bot, just remove allowed_users from the configuration.
+
 * Usage
-... once it is ready ...
+  Add your bot to a group chat, or start a chat with your bot. Available commands:
+#+BEGIN_EXAMPLE
+  - /later 10s test message
+  - /later 5m test message
+  - /later 12h test message
+  - /later 1d test message
+  - /at 2018-02-29 test message
+#+END_EXAMPLE
 
 * Tests
 #+BEGIN_SRC sh
@@ -14,3 +34,4 @@ $ pytests tests/
 - hy3
 - python3
 - pytest - for testing
+- syslog-ng (>= 3.18) with http and python3 support.
