@@ -2,9 +2,17 @@
 
 (defclass InvalidInputException [Exception])
 
+(defn dec [n]
+  (- n 1))
+
+(defn last-char [s]
+  ;; strangely (cut s -1) stopped working
+  (setv size (len s))
+  (cut s (dec size) size))
+
 (defn timeout-to-sec [timeout-str]
   (assert (> (len timeout-str 1)))
-  (setv modifier-symb (cut timeout-str -1))
+  (setv modifier-symb (last-char timeout-str))
 
   (cond [(.isdigit modifier-symb) (setv modifier 1)]
         [(= "s" modifier-symb) (setv modifier 1)]
@@ -14,9 +22,9 @@
         [True (raise (ValueError (.format "Error: invalid modifier in {}: {}" timeout-str modifier-symb)))])
 
   (try
-    (if (not (.isdigit modifier-symb))
-        (setv timeout-str-without-modifier (cut timeout-str 0 -1))
-        (setv timeout-str-without-modifier timeout-str))
+    (if (.isdigit modifier-symb)
+        (setv timeout-str-without-modifier timeout-str)
+        (setv timeout-str-without-modifier (cut timeout-str 0 -1)))
 
     (* (int timeout-str-without-modifier) modifier)
     (except [e ValueError]
