@@ -6,7 +6,7 @@
 (.setLevel logger logging.DEBUG)
 
 (defclass PersistState [object]
-  (defn --init-- [self persist-dir]
+  (defn __init__ [self persist-dir]
     (os.makedirs persist-dir :exist_ok True)
     (setv self.persist-dir persist-dir))
 

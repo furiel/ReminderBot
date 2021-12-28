@@ -9,7 +9,7 @@
 
 (defclass TelegramFetcher [object]
 
-  (defn connect [self &optional [host "api.telegram.org"] [context None]]
+  (defn connect [self [host "api.telegram.org"] [context None]]
     (setv self.conn (http.client.HTTPSConnection host :context context))
     self.conn)
 
@@ -130,7 +130,7 @@
                    (str e)))
         (setv self.last_id 0))))
 
-  (defn --init-- [self api-token &optional [persist-dir "persist-dir"] [allowed-users None]]
+  (defn __init__ [self api-token [persist-dir "persist-dir"] [allowed-users None]]
     (setv
       self.allowed-users allowed-users
       self.conn None

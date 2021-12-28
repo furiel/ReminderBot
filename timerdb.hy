@@ -1,7 +1,7 @@
 (import asyncio os select logging)
 
 (defclass TimerDB [object]
-  (defn --init-- [self]
+  (defn __init__ [self]
     (setv self.loop (asyncio.new_event_loop)))
 
   (defn start [self]
